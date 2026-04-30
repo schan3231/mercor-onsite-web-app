@@ -9,10 +9,14 @@
     "lint": "eslint",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "enrich": "tsx scripts/enrich-candidates.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
+    "dotenv": "^17.4.2",
     "next": "16.2.4",
+    "p-limit": "^7.3.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -30,6 +34,7 @@
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

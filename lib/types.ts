@@ -1,3 +1,15 @@
+export interface CandidateEnrichment {
+  inferredSkills: string[];
+  universityTier: 1 | 2 | 3 | 4 | 5;
+  universityRationale: string;
+  companyTiers: { name: string; tier: 1 | 2 | 3 | 4 | 5 }[];
+  avgCompanyTier: number;
+  topCompanyTier: number;
+  seniority: "junior" | "mid" | "senior" | "staff" | "executive";
+  specialties: string[];
+  redFlags: string[];
+}
+
 export interface WorkExperience {
   company: string;
   roleName: string;
@@ -12,6 +24,7 @@ export interface Degree {
   endDate: string;
   originalSchool: string;
   isTop50: boolean;
+  isTop25?: boolean;
 }
 
 export interface Education {
@@ -36,6 +49,7 @@ export interface Candidate {
   work_experiences: WorkExperience[];
   education: Education;
   skills: string[];
+  enrichment?: CandidateEnrichment | { error: string };
 }
 
 export interface ScoringWeights {

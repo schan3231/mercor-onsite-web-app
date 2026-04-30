@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ScoredCandidate } from "@/lib/types";
+import { ScoredCandidate, CandidateEnrichment } from "@/lib/types";
 import { parseSalary, formatSalary, scoreColor } from "@/lib/utils";
 import Link from "next/link";
 import ScoreBadge from "@/components/ScoreBadge";
@@ -18,9 +18,16 @@ const BREAKDOWN_LABELS: Record<string, string> = {
   salaryEfficiency: "Salary Fit",
 };
 
+function getMemberEnrichment(member: HiredMember): CandidateEnrichment | null {
+  return member.enrichment && !("error" in member.enrichment)
+    ? (member.enrichment as CandidateEnrichment)
+    : null;
+}
+
 function generateRationale(member: HiredMember): string {
   const { score, education, work_experiences, skills } = member;
-  const { breakdown, rationale } = score;
+  const { breakdown } = score;
+  const enrichment = getMemberEnrichment(member);
 
   const topFactor = Object.entries(breakdown).sort(([, a], [, b]) => b - a)[0][0];
   const topFactorLabel = BREAKDOWN_LABELS[topFactor] ?? topFactor;
@@ -29,8 +36,12 @@ function generateRationale(member: HiredMember): string {
   const expCount = work_experiences.length;
   const skillsSample = skills.slice(0, 3).join(", ");
 
+  const opener = enrichment
+    ? `As a ${enrichment.seniority}-level professional, ${member.name} is an excellent ${member.roleLabel} hire`
+    : `${member.name} is an excellent ${member.roleLabel} hire`;
+
   return (
-    `${member.name} is an excellent ${member.roleLabel} hire, scoring ${score.total}/100 overall. ` +
+    `${opener}, scoring ${score.total}/100 overall. ` +
     `Their strongest dimension is ${topFactorLabel} (${breakdown[topFactor as keyof typeof breakdown]}/100). ` +
     `With ${eduStr.toLowerCase()} credentials, ${expCount} professional roles, and expertise in ${skillsSample}, ` +
     `they bring the right combination of depth and range for this position.`
@@ -123,67 +134,103 @@ export default function TeamPage() {
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-4">The Team</h2>
           <div className="space-y-5">
-            {hiredMembers.map((member) => (
-              <div key={member.id} className="bg-white rounded-2xl border border-gray-200 p-6">
-                <div className="flex items-start gap-5">
-                  {/* Score */}
-                  <ScoreBadge score={member.score.total} size="lg" />
+            {hiredMembers.map((member) => {
+              const enrichment = getMemberEnrichment(member);
+              const inferredOnly = enrichment
+                ? enrichment.inferredSkills.filter(
+                    (s) => !member.skills.some((cs) => cs.toLowerCase() === s.toLowerCase())
+                  )
+                : [];
+              return (
+                <div key={member.id} className="bg-white rounded-2xl border border-gray-200 p-6">
+                  <div className="flex items-start gap-5">
+                    {/* Score */}
+                    <ScoreBadge score={member.score.total} size="lg" />
 
-                  {/* Main info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-lg">{member.roleEmoji}</span>
-                      <h3 className="font-bold text-gray-900 text-lg">{member.name}</h3>
-                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
-                        {member.roleLabel}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 mb-1">
-                      {member.location} · {member.education.highest_level}
-                    </p>
-                    <p className="text-sm text-gray-400 mb-3">
-                      {formatSalary(member.annual_salary_expectation["full-time"] ?? "")}/yr ·{" "}
-                      {member.work_experiences.length} roles
-                    </p>
-
-                    {/* Rationale */}
-                    <p className="text-sm text-gray-700 leading-relaxed bg-indigo-50 rounded-lg px-4 py-3 border border-indigo-100 mb-4">
-                      {generateRationale(member)}
-                    </p>
-
-                    {/* Score breakdown */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      {Object.entries(member.score.breakdown).map(([key, value]) => (
-                        <div key={key}>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-500">{BREAKDOWN_LABELS[key] ?? key}</span>
-                            <span className="font-semibold text-gray-700">{value}/100</span>
-                          </div>
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${scoreColor(value)}`}
-                              style={{ width: `${value}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Skills */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {member.skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
-                        >
-                          {skill}
+                    {/* Main info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-lg">{member.roleEmoji}</span>
+                        <h3 className="font-bold text-gray-900 text-lg">{member.name}</h3>
+                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+                          {member.roleLabel}
                         </span>
-                      ))}
+                        {enrichment && (
+                          <span className="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full capitalize">
+                            {enrichment.seniority}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        {member.location} · {member.education.highest_level}
+                      </p>
+                      <p className="text-sm text-gray-400 mb-3">
+                        {formatSalary(member.annual_salary_expectation["full-time"] ?? "")}/yr ·{" "}
+                        {member.work_experiences.length} roles
+                      </p>
+
+                      {/* Rationale */}
+                      <p className="text-sm text-gray-700 leading-relaxed bg-indigo-50 rounded-lg px-4 py-3 border border-indigo-100 mb-4">
+                        {generateRationale(member)}
+                      </p>
+
+                      {/* Score breakdown */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {Object.entries(member.score.breakdown).map(([key, value]) => (
+                          <div key={key}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-500">{BREAKDOWN_LABELS[key] ?? key}</span>
+                              <span className="font-semibold text-gray-700">{value}/100</span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${scoreColor(value)}`}
+                                style={{ width: `${value}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Red flags */}
+                      {enrichment && enrichment.redFlags.length > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
+                          <p className="text-xs text-amber-700">
+                            <span className="font-semibold">⚠ Flags: </span>
+                            {enrichment.redFlags.join("; ")}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Skills */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {member.skills.map((skill) => (
+                          <span
+                            key={skill}
+                            className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {inferredOnly.length > 0 && (
+                          <>
+                            <span className="text-xs text-gray-400 px-1 self-center">+ AI</span>
+                            {inferredOnly.map((skill) => (
+                              <span
+                                key={skill}
+                                className="text-xs px-2 py-0.5 rounded-full border border-dashed border-gray-300 text-gray-500"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -200,6 +247,29 @@ export default function TeamPage() {
                   <span className="text-gray-400 ml-auto">{m.location || "Unknown"}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Seniority mix */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h3 className="font-semibold text-gray-800 mb-3">Seniority Mix</h3>
+            <div className="space-y-2">
+              {hiredMembers.map((m) => {
+                const enrichment = getMemberEnrichment(m);
+                return (
+                  <div key={m.id} className="flex items-center gap-3 text-sm">
+                    <span className="text-base">{m.roleEmoji}</span>
+                    <span className="text-gray-700 font-medium">{m.roleLabel}</span>
+                    {enrichment ? (
+                      <span className="ml-auto text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full capitalize">
+                        {enrichment.seniority}
+                      </span>
+                    ) : (
+                      <span className="ml-auto text-xs text-gray-400">—</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -230,7 +300,7 @@ export default function TeamPage() {
           </div>
 
           {/* Skill coverage */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 md:col-span-2">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <h3 className="font-semibold text-gray-800 mb-3">Collective Skill Coverage</h3>
             <div className="flex flex-wrap gap-1.5">
               {topSkills.map((skill) => (

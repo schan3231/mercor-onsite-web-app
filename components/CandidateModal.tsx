@@ -35,6 +35,18 @@ export default function CandidateModal({
 }: CandidateModalProps) {
   const lowerBonus = bonusSkills.map((s) => s.toLowerCase());
   const salary = formatSalary(candidate.annual_salary_expectation["full-time"] ?? "");
+  const enrichment =
+    candidate.enrichment && !("error" in candidate.enrichment) ? candidate.enrichment : null;
+
+  const inferredOnly = enrichment
+    ? enrichment.inferredSkills.filter(
+        (s) => !candidate.skills.some((cs) => cs.toLowerCase() === s.toLowerCase())
+      )
+    : [];
+
+  const companyTierMap = new Map(
+    enrichment?.companyTiers.map((ct) => [ct.name.toLowerCase(), ct.tier]) ?? []
+  );
 
   // Close on Escape
   useEffect(() => {
@@ -60,6 +72,11 @@ export default function CandidateModal({
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-gray-900">{candidate.name}</h2>
             <p className="text-sm text-gray-500">{candidate.location || "Location unknown"}</p>
+            {enrichment && (
+              <span className="inline-block mt-1 text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full capitalize">
+                {enrichment.seniority}
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -128,11 +145,19 @@ export default function CandidateModal({
                       <p className="text-sm font-medium text-gray-800">{deg.degree || "Certification"}</p>
                       {deg.subject && <p className="text-xs text-gray-500">{deg.subject}</p>}
                       <p className="text-xs text-gray-400">{deg.originalSchool}</p>
+                      {i === 0 && enrichment && (
+                        <p className="text-xs text-gray-400 mt-1 italic">{enrichment.universityRationale}</p>
+                      )}
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
                       {deg.isTop50 && (
                         <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
                           Top 50
+                        </span>
+                      )}
+                      {i === 0 && enrichment && (
+                        <span className="text-xs bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
+                          Tier {enrichment.universityTier}/5
                         </span>
                       )}
                       {(deg.startDate || deg.endDate) && (
@@ -153,15 +178,25 @@ export default function CandidateModal({
               Work Experience
             </p>
             <div className="space-y-1.5">
-              {candidate.work_experiences.map((exp, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                  <div>
-                    <p className="text-sm text-gray-800">{exp.roleName}</p>
-                    <p className="text-xs text-gray-400">{exp.company}</p>
+              {candidate.work_experiences.map((exp, i) => {
+                const tier = companyTierMap.get(exp.company.toLowerCase());
+                return (
+                  <div key={i} className="flex gap-3 items-start">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                    <div>
+                      <p className="text-sm text-gray-800">{exp.roleName}</p>
+                      <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                        {exp.company}
+                        {tier !== undefined && (
+                          <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-mono">
+                            T{tier}
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -187,12 +222,37 @@ export default function CandidateModal({
                 );
               })}
             </div>
+            {inferredOnly.length > 0 && (
+              <>
+                <p className="text-xs text-gray-400 mt-2 mb-1">AI-inferred</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {inferredOnly.map((skill) => (
+                    <span
+                      key={skill}
+                      className="text-xs px-2 py-0.5 rounded-full border border-dashed border-gray-300 text-gray-500"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
             {bonusSkills.length > 0 && (
               <p className="text-xs text-indigo-500 mt-2">
                 Highlighted skills match the {activeRoleLabel} role
               </p>
             )}
           </div>
+
+          {/* Red flags */}
+          {enrichment && enrichment.redFlags.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+              <p className="text-xs text-amber-700">
+                <span className="font-semibold">⚠ Flags: </span>
+                {enrichment.redFlags.join("; ")}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer CTA */}

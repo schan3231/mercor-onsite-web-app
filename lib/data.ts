@@ -1,12 +1,22 @@
+import * as fs from "fs";
+import * as path from "path";
 import { Candidate } from "./types";
 import { parseSalary } from "./utils";
-import rawData from "../form-submissions.json";
+
+// Prefer the enriched file if it exists; fall back to the raw file.
+// This lets the app work before enrichment runs and automatically upgrade
+// once enrich-candidates.ts has been executed.
+function loadCandidates(): Candidate[] {
+  const enrichedPath = path.join(process.cwd(), "form-submissions-enriched.json");
+  const rawPath = path.join(process.cwd(), "form-submissions.json");
+  const filePath = fs.existsSync(enrichedPath) ? enrichedPath : rawPath;
+  const raw: Omit<Candidate, "id">[] = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return raw.map((c, i) => ({ ...c, id: i }));
+}
 
 // Assign stable numeric IDs at load time (index in original array).
 // Loaded once per process — no DB needed since data is static.
-const candidates: Candidate[] = (rawData as Omit<Candidate, "id">[]).map(
-  (c, i) => ({ ...c, id: i })
-);
+const candidates: Candidate[] = loadCandidates();
 
 export function getAllCandidates(): Candidate[] {
   return candidates;

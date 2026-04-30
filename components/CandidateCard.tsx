@@ -29,6 +29,8 @@ export default function CandidateCard({
   const eduLevel = candidate.education.highest_level;
 
   const lowerBonus = bonusSkills.map((s) => s.toLowerCase());
+  const enrichment =
+    candidate.enrichment && !("error" in candidate.enrichment) ? candidate.enrichment : null;
 
   return (
     <div
@@ -44,12 +46,27 @@ export default function CandidateCard({
           <p className="font-semibold text-gray-900 truncate">{candidate.name}</p>
           <p className="text-xs text-gray-500 truncate">{candidate.location || "Location unknown"}</p>
           <p className="text-xs text-gray-400">{eduLevel}</p>
+          {enrichment && (
+            <span className="inline-block mt-0.5 text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full capitalize">
+              {enrichment.seniority}
+            </span>
+          )}
         </div>
-        {isInTeam && (
-          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full shrink-0 font-medium">
-            Hired
-          </span>
-        )}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {isInTeam && (
+            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+              Hired
+            </span>
+          )}
+          {enrichment && enrichment.redFlags.length > 0 && (
+            <span
+              className="text-xs text-amber-500 cursor-default"
+              title={enrichment.redFlags.join("; ")}
+            >
+              ⚠
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Skills */}
