@@ -33,19 +33,19 @@ describe("ROLE_PRESETS", () => {
     expect(balanced).toBeDefined();
   });
 
-  it("includes CEO, CTO, engineer, designer, data presets", () => {
+  it("includes COO, CTO, engineer, designer, data presets", () => {
     const ids = ROLE_PRESETS.map((p) => p.id);
-    expect(ids).toContain("ceo");
+    expect(ids).toContain("coo");
     expect(ids).toContain("cto");
     expect(ids).toContain("engineer");
     expect(ids).toContain("designer");
     expect(ids).toContain("data");
   });
 
-  it("CEO preset prioritizes experience weight", () => {
-    const ceo = ROLE_PRESETS.find((p) => p.id === "ceo")!;
-    expect(ceo.weights.experience).toBeGreaterThan(ceo.weights.education);
-    expect(ceo.weights.experience).toBeGreaterThan(ceo.weights.skills);
+  it("COO preset prioritizes experience weight", () => {
+    const coo = ROLE_PRESETS.find((p) => p.id === "coo")!;
+    expect(coo.weights.experience).toBeGreaterThan(coo.weights.education);
+    expect(coo.weights.experience).toBeGreaterThan(coo.weights.skills);
   });
 
   it("designer preset prioritizes skills weight", () => {
@@ -90,8 +90,8 @@ describe("DEFAULT_TEAM_SLOTS", () => {
     }
   });
 
-  it("CEO is the first slot", () => {
-    expect(DEFAULT_TEAM_SLOTS[0].roleId).toBe("ceo");
+  it("COO is the first slot", () => {
+    expect(DEFAULT_TEAM_SLOTS[0].roleId).toBe("coo");
   });
 
   it("slot role ids correspond to existing presets (excluding balanced)", () => {

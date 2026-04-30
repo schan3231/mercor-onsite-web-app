@@ -14,8 +14,12 @@ const defaultProps = {
   weights: defaultWeights,
   activePresetId: "balanced",
   presets: ROLE_PRESETS,
+  activeRoleSkills: [],
+  allSkills: ["Python", "React", "TypeScript"],
   onWeightsChange: jest.fn(),
   onPresetSelect: jest.fn(),
+  onSkillsChange: jest.fn(),
+  onSkillsReset: jest.fn(),
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -36,24 +40,24 @@ describe("ScoringWeightsPanel — preset buttons", () => {
 
   it("inactive preset buttons have gray background", () => {
     render(<ScoringWeightsPanel {...defaultProps} activePresetId="balanced" />);
-    const ceoBtn = screen.getByText("CEO").closest("button")!;
-    expect(ceoBtn).toHaveClass("bg-gray-100");
-    expect(ceoBtn).not.toHaveClass("bg-indigo-600");
+    const cooBtn = screen.getByText("COO").closest("button")!;
+    expect(cooBtn).toHaveClass("bg-gray-100");
+    expect(cooBtn).not.toHaveClass("bg-indigo-600");
   });
 
   it("clicking a preset calls onPresetSelect with the correct preset", () => {
     const onPresetSelect = jest.fn();
     render(<ScoringWeightsPanel {...defaultProps} onPresetSelect={onPresetSelect} />);
-    fireEvent.click(screen.getByText("CEO").closest("button")!);
+    fireEvent.click(screen.getByText("COO").closest("button")!);
     expect(onPresetSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "ceo" })
+      expect.objectContaining({ id: "coo" })
     );
   });
 
   it("clicking active preset still calls onPresetSelect", () => {
     const onPresetSelect = jest.fn();
-    render(<ScoringWeightsPanel {...defaultProps} onPresetSelect={onPresetSelect} activePresetId="ceo" />);
-    fireEvent.click(screen.getByText("CEO").closest("button")!);
+    render(<ScoringWeightsPanel {...defaultProps} onPresetSelect={onPresetSelect} activePresetId="coo" />);
+    fireEvent.click(screen.getByText("COO").closest("button")!);
     expect(onPresetSelect).toHaveBeenCalledTimes(1);
   });
 });

@@ -105,10 +105,12 @@ function skillsScore(
   // Base: up to 80 pts from skill breadth (capped at 15 skills)
   const base = Math.min(count, 15) / 15 * 80;
 
-  // Bonus: up to 20 pts for matching role-specific bonus skills (capped at 3 matches)
+  // Bonus: up to 20 pts for matching role-specific bonus skills.
+  // Denominator scales with list size but is never less than 3, preserving preset behavior.
   const lowerBonus = bonusSkills.map((b) => b.toLowerCase());
   const matches = allSkills.filter((s) => lowerBonus.includes(s.toLowerCase()));
-  const bonus = Math.min(matches.length, 3) / 3 * 20;
+  const denominator = Math.max(bonusSkills.length, 3);
+  const bonus = Math.min(matches.length, denominator) / denominator * 20;
 
   const score = Math.min(100, base + bonus);
 

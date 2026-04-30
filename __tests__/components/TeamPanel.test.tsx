@@ -25,7 +25,7 @@ beforeEach(() => {
 describe("TeamPanel — rendering", () => {
   it("renders 5 role slots", () => {
     render(<TeamPanel slots={emptySlots} activeSlotIndex={0} onSlotClick={jest.fn()} onRemove={jest.fn()} />);
-    expect(screen.getByText("CEO")).toBeInTheDocument();
+    expect(screen.getByText("COO")).toBeInTheDocument();
     expect(screen.getByText("CTO")).toBeInTheDocument();
     expect(screen.getByText("Senior Engineer")).toBeInTheDocument();
     expect(screen.getByText("Product Designer")).toBeInTheDocument();

@@ -28,7 +28,9 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activePresetId, setActivePresetId] = useState("balanced");
   const [weights, setWeights] = useState<ScoringWeights>(PRESET_MAP["balanced"].weights);
-  const [bonusSkills, setBonusSkills] = useState<string[]>([]);
+  const [roleSkills, setRoleSkills] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(ROLE_PRESETS.map((p) => [p.id, [...p.bonusSkills]]))
+  );
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     skills: [],
@@ -88,15 +90,17 @@ export default function HomePage() {
     return () => clearTimeout(timeout);
   }, [filters, meta]);
 
-  // Score all candidates client-side whenever weights/bonusSkills/rawCandidates change.
+  const activeBonusSkills = roleSkills[activePresetId] ?? [];
+
+  // Score all candidates client-side whenever weights/activeBonusSkills/rawCandidates change.
   // This lets weight sliders update rankings instantly without a network round-trip.
   const scoredCandidates = useMemo<ScoredCandidate[]>(() => {
     if (!meta) return [];
     return rawCandidates.map((c) => ({
       ...c,
-      score: localStrategy.scoreCandidate(c, weights, bonusSkills, meta.allSalaries),
+      score: localStrategy.scoreCandidate(c, weights, activeBonusSkills, meta.allSalaries),
     }));
-  }, [rawCandidates, weights, bonusSkills, meta]);
+  }, [rawCandidates, weights, activeBonusSkills, meta]);
 
   const sortedCandidates = useMemo<ScoredCandidate[]>(() => {
     const sorted = [...scoredCandidates];
@@ -132,7 +136,6 @@ export default function HomePage() {
   function handlePresetSelect(preset: (typeof ROLE_PRESETS)[0]) {
     setActivePresetId(preset.id);
     setWeights(preset.weights);
-    setBonusSkills(preset.bonusSkills);
     const slotIndex = teamSlots.findIndex((s) => s.roleId === preset.id);
     if (slotIndex !== -1) setActiveSlotIndex(slotIndex);
   }
@@ -144,7 +147,6 @@ export default function HomePage() {
     if (preset) {
       setActivePresetId(preset.id);
       setWeights(preset.weights);
-      setBonusSkills(preset.bonusSkills);
     }
   }
 
@@ -219,8 +221,19 @@ export default function HomePage() {
             weights={weights}
             activePresetId={activePresetId}
             presets={ROLE_PRESETS}
+            activeRoleSkills={activeBonusSkills}
+            allSkills={meta?.skills ?? []}
             onWeightsChange={setWeights}
             onPresetSelect={handlePresetSelect}
+            onSkillsChange={(skills) =>
+              setRoleSkills((prev) => ({ ...prev, [activePresetId]: skills }))
+            }
+            onSkillsReset={() =>
+              setRoleSkills((prev) => ({
+                ...prev,
+                [activePresetId]: [...(PRESET_MAP[activePresetId]?.bonusSkills ?? [])],
+              }))
+            }
           />
           <div className="border-t border-gray-100 pt-4">
             {meta && (
@@ -245,9 +258,9 @@ export default function HomePage() {
               <p className="text-xs text-indigo-500 font-medium">Currently hiring for</p>
               <p className="text-sm font-semibold text-indigo-900">{activeRole?.roleLabel}</p>
             </div>
-            {bonusSkills.length > 0 && (
+            {activeBonusSkills.length > 0 && (
               <div className="ml-auto flex gap-1 flex-wrap max-w-sm justify-end">
-                {bonusSkills.slice(0, 5).map((s) => (
+                {activeBonusSkills.slice(0, 5).map((s) => (
                   <span key={s} className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">
                     {s}
                   </span>
@@ -283,7 +296,7 @@ export default function HomePage() {
                     isInTeam={teamCandidateIds.has(candidate.id)}
                     isTeamFull={isTeamFull}
                     activeRoleLabel={activeRole?.roleLabel ?? "Team"}
-                    bonusSkills={bonusSkills}
+                    bonusSkills={activeBonusSkills}
                   />
                 ))}
               </div>
@@ -336,7 +349,7 @@ export default function HomePage() {
           candidate={selectedCandidate}
           activeRoleLabel={activeRole?.roleLabel ?? "Team"}
           activeRoleEmoji={activeRole?.roleEmoji ?? ""}
-          bonusSkills={bonusSkills}
+          bonusSkills={activeBonusSkills}
           isInTeam={teamCandidateIds.has(selectedCandidate.id)}
           isTeamFull={isTeamFull}
           onClose={() => setSelectedCandidate(null)}

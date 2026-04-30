@@ -10,13 +10,13 @@ export const ROLE_PRESETS: RolePreset[] = [
     bonusSkills: [],
   },
   {
-    id: "ceo",
-    label: "CEO",
+    id: "coo",
+    label: "COO",
     emoji: "👔",
     description:
-      "Prioritizes leadership experience and operational breadth. Education and career trajectory matter most.",
-    weights: { education: 25, experience: 45, skills: 15, salaryEfficiency: 15 },
-    bonusSkills: ["Management", "Agile", "Leadership", "Strategy", "Operations", "Business Development"],
+      "Operational excellence. Rewards process ownership, cross-functional leadership, and execution track record.",
+    weights: { education: 20, experience: 40, skills: 25, salaryEfficiency: 15 },
+    bonusSkills: ["Operations", "Project Management", "Strategic Planning", "Leadership", "Process Improvement"],
   },
   {
     id: "cto",
@@ -61,7 +61,7 @@ export const PRESET_MAP: Record<string, RolePreset> = Object.fromEntries(
 );
 
 export const DEFAULT_TEAM_SLOTS: TeamSlot[] = [
-  { roleId: "ceo", roleLabel: "CEO", roleEmoji: "👔", candidate: null },
+  { roleId: "coo", roleLabel: "COO", roleEmoji: "👔", candidate: null },
   { roleId: "cto", roleLabel: "CTO", roleEmoji: "🛠️", candidate: null },
   { roleId: "engineer", roleLabel: "Senior Engineer", roleEmoji: "💻", candidate: null },
   { roleId: "designer", roleLabel: "Product Designer", roleEmoji: "🎨", candidate: null },
