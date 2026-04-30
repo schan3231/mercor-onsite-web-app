@@ -1,5 +1,5 @@
 import { Candidate, CandidateScore, ScoringWeights } from "../types";
-import { parseSalary } from "../data";
+import { parseSalary } from "../utils";
 import { ScoringStrategy } from "./index";
 
 // Education level → raw subscore (0–100 scale before top-50 bonus).

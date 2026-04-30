@@ -1,4 +1,5 @@
 import { Candidate } from "./types";
+import { parseSalary } from "./utils";
 import rawData from "../form-submissions.json";
 
 // Assign stable numeric IDs at load time (index in original array).
@@ -18,23 +19,8 @@ export function getCandidateById(id: number): Candidate | undefined {
 // Precomputed salary list for percentile calculation in the scoring engine.
 export const ALL_SALARIES: number[] = candidates
   .map((c) => parseSalary(c.annual_salary_expectation["full-time"] ?? ""))
-  .filter((s) => s > 0);
-
-ALL_SALARIES.sort((a, b) => a - b);
-
-export function parseSalary(raw: string): number {
-  if (!raw) return 0;
-  const cleaned = raw.replace(/[$,]/g, "");
-  const val = parseFloat(cleaned);
-  return isNaN(val) ? 0 : val;
-}
-
-// Returns what percentile (0–1) a salary sits at — used for salary efficiency scoring.
-export function salaryPercentile(salary: number): number {
-  if (salary <= 0) return 0.5;
-  const below = ALL_SALARIES.filter((s) => s < salary).length;
-  return below / ALL_SALARIES.length;
-}
+  .filter((s) => s > 0)
+  .sort((a, b) => a - b);
 
 export function getUniqueLocations(): string[] {
   const seen = new Set<string>();
