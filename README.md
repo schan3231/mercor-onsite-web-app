@@ -79,7 +79,7 @@ interface ScoringStrategy {
 
 This interface makes the scoring algorithm **swappable**. To activate Claude API scoring, set `SCORING_STRATEGY=claude` in `.env.local` and implement `lib/scoring/claudeStrategy.ts`. The `rationale: string[]` field on every `CandidateScore` is the natural place for LLM-generated text.
 
-### Scoring Factors (Local Algorithm)
+### Scoring Factors (Local Algorithm)1
 
 Each factor produces a raw subscore (0–100), then is weighted:
 
